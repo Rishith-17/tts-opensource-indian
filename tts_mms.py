@@ -115,57 +115,17 @@ class MMSTTS:
         return audio
     
     def save_audio(self, wav, output_path="output.wav"):
-        """
-        Save audio with quality processing.
-        
-        Args:
-            wav (numpy.ndarray): Audio waveform
-            output_path (str): Output file path
-        """
-        # MMS uses 16kHz sample rate
+        import soundfile as sf
         sample_rate = 16000
-        
-        # Convert to numpy array
         wav = np.array(wav, dtype=np.float32)
-        
-        # 1. Remove DC offset
         wav = wav - np.mean(wav)
-        
-        # 2. High-pass filter (80Hz) - remove rumble
-        nyquist = sample_rate / 2
-        cutoff = 80 / nyquist
-        b, a = signal.butter(4, cutoff, btype='high')
-        wav = signal.filtfilt(b, a, wav)
-        
-        # 3. Low-pass filter (7500Hz) - remove noise (adjusted for 16kHz)
-        cutoff_high = 7500 / nyquist
-        b_high, a_high = signal.butter(4, cutoff_high, btype='low')
-        wav = signal.filtfilt(b_high, a_high, wav)
-        
-        # 4. Normalize with soft clipping
-        max_val = np.abs(wav).max()
-        if max_val > 0:
-            wav = wav / max_val * 0.85
-            wav = np.tanh(wav * 1.2) * 0.95
-        
-        # 5. Gentle silence removal
-        threshold = 0.01
-        non_silent = np.abs(wav) > threshold
-        if non_silent.any():
-            padding_samples = int(sample_rate * 0.05)  # 50ms
-            start_idx = max(0, np.argmax(non_silent) - padding_samples)
-            end_idx = min(len(wav), len(wav) - np.argmax(non_silent[::-1]) + padding_samples)
-            wav = wav[start_idx:end_idx]
-        
-        # 6. Fade in/out
-        fade_samples = int(sample_rate * 0.01)  # 10ms
-        if len(wav) > fade_samples * 2:
-            fade_in = np.linspace(0, 1, fade_samples)
-            wav[:fade_samples] *= fade_in
-            fade_out = np.linspace(1, 0, fade_samples)
-            wav[-fade_samples:] *= fade_out
-        
-        # Save with high quality
+        peak = np.abs(wav).max()
+        if peak > 0:
+            wav = wav / peak * 0.90
+        fade = int(sample_rate * 0.005)
+        if len(wav) > fade * 2:
+            wav[:fade]  *= np.linspace(0, 1, fade)
+            wav[-fade:] *= np.linspace(1, 0, fade)
         sf.write(output_path, wav, sample_rate, subtype='PCM_16')
         print(f"Audio saved to: {output_path}")
 

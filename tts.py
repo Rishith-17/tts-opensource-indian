@@ -148,10 +148,14 @@ class MultilingualTTS:
         elif speaker_name.endswith("_fast"):
             speed_scale = 0.85  # 15% faster
             speaker_name = speaker_name.replace("_fast", "")
-        
+
         # Validate speaker name
         if speaker_name not in ("female", "male"):
             speaker_name = "female"
+
+        # Male voice: slightly slower for natural, professional feel
+        if speaker_name == "male" and speed_scale == 1.0:
+            speed_scale = 1.1   # 10% slower — natural customer care pacing
         
         # Clean text - replace problematic characters
         text = text.replace("\u2019", "'")
@@ -187,71 +191,29 @@ class MultilingualTTS:
             raise RuntimeError(f"Failed to generate speech: {e}")
     
     def save_audio(self, wav, output_path="output.wav"):
-        """
-        Save audio waveform to file with enhanced quality and clarity.
-        
-        Args:
-            wav (numpy.ndarray): Audio waveform
-            output_path (str): Output file path
-        """
         import soundfile as sf
-        from scipy import signal
-        
-        # Get sample rate from current synthesizer
+
         if self.current_language in self.synthesizers:
-            synthesizer = self.synthesizers[self.current_language]
-            sample_rate = synthesizer.output_sample_rate
+            sample_rate = self.synthesizers[self.current_language].output_sample_rate
         else:
-            sample_rate = 22050  # Default
-        
-        # Convert to numpy array
+            sample_rate = 22050
+
         wav = np.array(wav, dtype=np.float32)
-        
-        # 1. Remove DC offset (can cause buzzing)
+
+        # Remove DC offset only
         wav = wav - np.mean(wav)
-        
-        # 2. Apply high-pass filter to remove low-frequency rumble/buzz
-        # Cutoff at 80Hz to remove rumble but keep voice
-        nyquist = sample_rate / 2
-        cutoff = 80 / nyquist
-        b, a = signal.butter(4, cutoff, btype='high')
-        wav = signal.filtfilt(b, a, wav)
-        
-        # 3. Apply low-pass filter to remove high-frequency noise
-        # Cutoff at 8000Hz (voice is typically below this)
-        cutoff_high = 8000 / nyquist
-        b_high, a_high = signal.butter(4, cutoff_high, btype='low')
-        wav = signal.filtfilt(b_high, a_high, wav)
-        
-        # 4. Normalize audio with soft clipping to prevent distortion
-        max_val = np.abs(wav).max()
-        if max_val > 0:
-            # Normalize to 85% to leave headroom
-            wav = wav / max_val * 0.85
-            
-            # Soft clipping for any peaks above 0.95
-            wav = np.tanh(wav * 1.2) * 0.95
-        # 5. Gentle silence removal - only remove very quiet parts
-        threshold = 0.01  # Slightly higher threshold
-        non_silent = np.abs(wav) > threshold
-        if non_silent.any():
-            # Add padding to avoid cutting speech
-            padding_samples = int(sample_rate * 0.05)  # 50ms padding
-            start_idx = max(0, np.argmax(non_silent) - padding_samples)
-            end_idx = min(len(wav), len(wav) - np.argmax(non_silent[::-1]) + padding_samples)
-            wav = wav[start_idx:end_idx]
-        
-        # 6. Apply fade in/out to avoid clicks
-        fade_samples = int(sample_rate * 0.01)  # 10ms fade
-        if len(wav) > fade_samples * 2:
-            # Fade in
-            fade_in = np.linspace(0, 1, fade_samples)
-            wav[:fade_samples] *= fade_in
-            # Fade out
-            fade_out = np.linspace(1, 0, fade_samples)
-            wav[-fade_samples:] *= fade_out
-        
-        # Save with high quality
+
+        # Clean normalize — no filters, no clipping, no distortion
+        peak = np.abs(wav).max()
+        if peak > 0:
+            wav = wav / peak * 0.90
+
+        # Fade in/out 5ms to avoid clicks at boundaries
+        fade = int(sample_rate * 0.005)
+        if len(wav) > fade * 2:
+            wav[:fade]  *= np.linspace(0, 1, fade)
+            wav[-fade:] *= np.linspace(1, 0, fade)
+
         sf.write(output_path, wav, sample_rate, subtype='PCM_16')
         print(f"Audio saved to: {output_path}")
 

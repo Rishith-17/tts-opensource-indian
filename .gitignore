@@ -1,47 +1,41 @@
+# Secrets — NEVER commit
+.env
+*.key
+
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-.eggs/
 venv/
 env/
 .venv/
+*.egg-info/
 
-# Models (too large for GitHub — download separately)
+# Models (too large — downloaded via setup_models.py)
 models/
 *.pth
 *.bin
 *.onnx
 lid.176.bin
 
-# Audio output files
+# Audio output
 *.wav
 *.mp3
 
+# Finetune data/cache (large, generated locally)
+finetune/data/
+finetune/cache/
+finetune/output/
+finetune/raw/
+
 # Node / React
 node_modules/
-assistant_project/frontend/tts-ui/dist/
-
-# Environment / secrets
-.env
-.env.*
-*.key
-
-# IDE
-.vscode/
-.idea/
-*.suo
-*.user
+dist/
 
 # OS
 .DS_Store
 Thumbs.db
+.vscode/
 
 # Logs
 *.log
-npm-debug.log*

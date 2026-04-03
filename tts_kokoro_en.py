@@ -24,9 +24,9 @@ SAMPLE_RATE = 24000  # Kokoro native sample rate
 # Voice mapping: our standard speaker names → Kokoro voice IDs
 VOICE_MAP = {
     "female":      "af_sarah",
-    "male":        "am_michael",
+    "male":        "am_michael",   # deep natural American male
     "female_slow": "af_bella",
-    "male_slow":   "bm_george",
+    "male_slow":   "bm_george",    # British male, slower and articulate
 }
 
 

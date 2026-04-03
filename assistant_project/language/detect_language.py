@@ -45,27 +45,21 @@ class LanguageDetector:
             self.model = None
     
     def detect(self, text):
-        """
-        Detect language from text.
-        
-        Args:
-            text (str): Input text
-            
-        Returns:
-            str: Language code (kn, hi, en, ta, te)
-        """
+        """Detect language — Unicode script check takes priority over fastText."""
+        # Unicode check first — 100% accurate for Indic scripts
+        script_lang = self._fallback_detection(text)
+        if script_lang != 'en':
+            return script_lang   # Kannada/Hindi/Tamil/Telugu detected by script
+
+        # English text — use fastText for confidence
         if not self.model:
-            return self._fallback_detection(text)
-        
+            return 'en'
         try:
             predictions = self.model.predict(text.replace('\n', ' '))
             lang_code = predictions[0][0].replace('__label__', '')
-            
-            # Map to supported languages
-            return self.LANG_MAP.get(lang_code, self._fallback_detection(text))
-        except Exception as e:
-            print(f"Detection error: {e}")
-            return self._fallback_detection(text)
+            return self.LANG_MAP.get(lang_code, 'en')
+        except Exception:
+            return 'en'
     
     def _fallback_detection(self, text):
         """
