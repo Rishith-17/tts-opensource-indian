@@ -1,4 +1,8 @@
-# Core
+# Install with: pip install -r requirements.txt
+# Python 3.10-3.12 supported
+
+# PyTorch — install FIRST separately if you have GPU:
+# pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 torch>=2.0.0
 torchaudio>=2.0.0
 
@@ -10,23 +14,18 @@ soundfile>=0.12.1
 scipy>=1.11.0
 
 # STT
-openai-whisper>=20231117
+openai-whisper
 
 # Language detection
-fasttext-wheel>=0.9.2
+fasttext-wheel
 
-# LLM
+# LLM / API
 sarvamai>=0.1.0
-
-# NLP / Translation
-sentencepiece>=0.1.99
-sacremoses>=0.0.53
 
 # API server
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
 
-# Audio recording (assistant UI)
-pyaudio>=0.2.14
-numpy>=1.24.0
+# Audio
+numpy>=1.22.0

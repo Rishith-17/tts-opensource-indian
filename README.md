@@ -12,13 +12,15 @@ cd tts-opensource-indian
 install.bat
 ```
 
-## Setup API Keys
+> Requires Python 3.10–3.12 and Node.js 18+
+
+## Setup API Key
 
 Copy `.env.example` to `.env` and add your key:
 ```
 SARVAM_API_KEY=your_key_here
 ```
-Get your key at [sarvam.ai](https://sarvam.ai)
+Get your free key at [sarvam.ai](https://sarvam.ai)
 
 ## Start
 
